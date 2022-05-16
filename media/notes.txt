@@ -1,0 +1,2 @@
+[1] Can ignore "ImportError: numpy.core.umath failed to import" -- Mac OS
+[2] Handle png to inline image converter: https://ezgif.com/image-to-datauri

@@ -1,0 +1,901 @@
+###############################################################################
+#
+#    * * * P I P E L I N E   C O N F I G U R A T I O N   T E S T   F I L E
+#
+# Originator: Dr. Michelle M. Boyce
+# Date: June 4, 2020.
+
+# This is an fully annotated version of a VLASS configuration file used
+# for the purposes of software development and testing. It is also used
+# in conjunction with the catenator.py <command> --help commands as a
+# basically pipeline help / tutorial.
+#
+# This file uses the YAML standard, for providing human friendly configuration
+# files, and is divided into blocks in accordance with the pipeline steps:
+#
+#    .----------------------.----------------------------------.
+#    | configuration block  | description                      |
+#    |----------------------+----------------------------------|
+#    | versioning           | version information              |
+#    | directories          | output director definitions      |
+#    | downloads            | download url manifest            |
+#    | pybdsf               | pybdsf image processing settings |
+#    | vlad                 | vlad modules and metadata        |
+#    | diagnostics          | diagnostics modules and metadata |
+#    | qa                   | qa modules and metadata          |
+#    | upload               | vospace uploader information     |
+#    .----------------------.----------------------------------.
+#
+# The command line help provides details information regarding these step
+# and related settings.
+
+
+# Pipeline version information.
+versioning:
+    owner: 'CIRADA'
+    creation:
+        version: 1
+        revision: 0
+        date:
+            year: 2020
+            month: 5
+            day: 23
+    team:
+        leads: 
+            - "Chris O'Dea"
+        developers: 
+            - "Michelle Boyce"
+        analysts:
+            - "Yjan Gordon"
+            - "Larry Rudnick"
+    documents:
+        - 'PSOFT.15.V1.00'
+        - 'PSOFT.15.QA.V1.00'
+        - 'PCAT.1.V1.00'
+        - 'PCAT.1.QA.V1.00'
+
+
+# Pipeline output directory locations, relative to the
+# catenator.py script. The directories are automatically
+# created, if they do not exist, upon running the script.
+directories:
+    tiles:       'data/tiles'
+    logs:        'data/logs'
+    scratch:     'data/scratch'
+    catalogues:  'data/catalogues'
+    diagnostics: 'data/diagnostics'
+    products:    'data/products'
+
+
+# Download manifest location for download command.
+downloads:
+    manifest: 'media/manifests/venkat.csv'
+
+
+# PyBDSF image processing settings for the process command.
+#    NB: Only the rms_box and frequency settings are supported 
+#    by the current software. Changing the other settings will
+#    most likely break the pipeline.
+# See process --help command for details.
+pybdsf:
+    processing:
+        rms_box: # [1]
+             box_size_pixels:  200
+             step_size_pixels: 50
+        frequency: 2.987741489322E+09
+    catalogue:   # [2]
+        format: 'csv'
+        catalog_type: 'srl'
+        incl_empty: True
+    region_file: # [2]
+        format: 'ds9'
+        catalog_type: 'srl'
+        incl_empty: True
+# Notes:
+# [1] https://www.astron.nl/citt/pybdsf/process_image.html
+# [2] https://www.astron.nl/citt/pybdsm/write_catalog.html
+
+
+# Subtile-based VLAD catalogue settings for the vlad command.
+#    Note: The stacked catalogue is generated at the diagnostics
+#    step using the catalogue meta definitions herein.
+# See vlad --help command for details.
+vlad:
+    # software module input metrics
+    metrics:
+        peak_to_ring_annulus:
+            units: 'arcsec'
+            r_inner: 5
+            r_outer: 10
+    # vlad catalogue block
+    catalogue:
+        # final product output filenames (used at the qa command stage)
+        filename: 'VLASS1_UOFM_QL_Catalogue.csv'
+        json_help_file: 'VLASS_Component_Catalogue_Help_Map.json'
+        # catalogue column module scripts
+        modules: 
+            - Component_name: 
+                  module: 'pybdsf_component_name'
+            - S_Code:
+                  module: 's_code'
+            - Tile:
+                  module: 'tile_name'
+            - Subtile:
+                  module: 'subtile_name'
+            - Peak_to_ring:
+                  module: 'peak_to_ring'
+            - QL_image_RA:
+                  module: 'ql_image_ra'
+            - QL_image_DEC:
+                  module: 'ql_image_dec'
+            - QL_cutout:
+                  module: 'ql_cutout'
+            - BMAJ:
+                  module: 'VLAD_BMAJ'
+            - BMIN:
+                  module: 'VLAD_BMIN'
+            - BPA:
+                  module: 'VLAD_BPA'
+        # catalogue and html_help metadata
+        meta:
+            - Component_name:
+                  iau_format: 'VLASS1QLCIR JHHMMSS.ss+DDMMSS.s'
+                  iau_reference: 'http://cds.u-strasbg.fr/cgi-bin/Dic?VLASS1QLCIR'
+                  html_help:
+                      mouseover: '<a href="{iau_reference}">IAU name of the PyBDSF component.</a>'
+            - Component_id:
+                  field_old: 'Source_id'
+                  html_help:
+                      mouseover: 'The ID of the PyBDSF assigned component (<i>i.e.</i>, Source_id in PyBDSF).'
+            - Isl_id:
+                  html_help:
+                      mouseover: 'The ID of the PyBDSF island in which the component is located.'
+            - RA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Right ascension [{units}].'
+            - DEC:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Declination [{units}].'
+            - E_RA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>RA</b> [{units}].'
+            - E_DEC:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Dec</b> [{units}].'
+            - Total_flux:
+                  units_old: 'Jy'
+                  units: 'mJy'
+                  html_help:
+                      mouseover: 'Integrated flux [{units}].'
+            - E_Total_flux:
+                  units_old: 'Jy'
+                  units: 'mJy'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in integrated flux [{units}].'
+            - Peak_flux:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Peak flux [{units}].'
+            - E_Peak_flux:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in peak flux [{units}].'
+            - Maj:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM of the major axis [{units}].'
+            - E_Maj:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Maj</b> [{units}].'
+            - Min:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM of the minor axis [{units}].'
+            - E_Min:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Min</b> [{units}].'
+            - PA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Position angle, east of north [{units}].'
+            - E_PA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>PA</b> [{units}].'
+            - Isl_Total_flux:
+                  units_old: 'Jy'
+                  units: 'mJy'
+                  html_help:
+                      mouseover: 'Total flux in island containing the component [{units}].'
+            - E_Isl_Total_flux:
+                  units_old: 'Jy'
+                  units: 'mJy'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Isl_Total_flux</b> [{units}].'
+            - Isl_rms:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Average Island background RMS [{units}].'
+            - Isl_mean:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Average island background mean [{units}].'
+            - Resid_Isl_rms:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Average island residual background RMS [{units}].'
+            - Resid_Isl_mean:
+                  units_old: 'Jy/beam'
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Average island residual background mean [{units}].'
+            - RA_max:
+                  units: 'deg'
+                  html_help:
+                      mouseover: '<b>RA</b> of the maximum flux of the component (peak flux position) [{units}].'
+            - DEC_max:
+                  units: 'deg'
+                  html_help:
+                      mouseover: '<b>DEC</b> of the maximum flux of the component (peak flux position) [{units}].'
+            - E_RA_max:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>RA_max</b> [{units}].'
+            - E_DEC_max:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>DEC_max</b> [{units}].'
+            - S_Code:
+                  html_help:
+                      mouseover: 'A code that defines the component structure.'
+                      expanded:  '<ul style="margin: 3px 0 3px 4px">
+                                      <li>&lsquo;S&rsquo; = Single-Gaussian component that is the only component in the island;</li>
+                                      <li>&lsquo;C&rsquo; = Single-Gaussian component in an island with other components;</li>
+                                      <li>&lsquo;M&rsquo; = Multi-Gaussian component;</li>
+                                      <li>&lsquo;E&rsquo; = Empty island (<i>i.e.</i>, failed Gaussian fitting).</li>
+                                  </ul>'
+            - Xposn:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'X-position of component in the image array [{units}].'
+            - E_Xposn:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Xposn</b> [{units}].'
+            - Yposn:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Y-position of component in the image array [{units}].'
+            - E_Yposn:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Yposn</b> [{units}].'
+            - Xposn_max:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'X-position of component peak in the image array.'
+            - E_Xposn_max:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Xposn_max</b> [{units}].'
+            - Yposn_max:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Y-position of component peak in the image array.'
+            - E_Yposn_max:
+                  units: 'pixel'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Yposn_max</b> [{units}].'
+            - Maj_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Component major axis size (FWHM) in the image plane [{units}].'
+            - E_Maj_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Maj_img_plane</b> [{units}].'
+            - Min_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Component minor axis size (FWHM) in the image plane [{units}].'
+            - E_Min_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>Min_img_plane</b> [{units}].'
+            - PA_img_plane:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Component position angle in the image plane, east of north [{units}].'
+            - E_PA_img_plane:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>E_PA_img_plane</b> [{units}].'
+            - DC_Maj:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM deconvolved component major axis size [{units}].'
+            - E_DC_Maj:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>E_DC_Maj</b> [{units}].'
+            - DC_Min:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM deconvolved component minor axis size [{units}].'
+            - E_DC_Min:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>E_DC_Min</b> [{units}].'
+            - DC_PA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Deconvolved component position angle, east of north [{units}].'
+            - E_DC_PA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>DC_PA</b> [{units}].'
+            - DC_Maj_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM deconvolved component major axis size in the image plane [{units}].'
+            - E_DC_Maj_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>DC_Maj_img_plane</b> [{units}].'
+            - DC_Min_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'FWHM deconvolved component minor axis size in the image plane [{units}].'
+            - E_DC_Min_img_plane:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>DC_Min_img_plane</b> [{units}].'
+            - DC_PA_img_plane:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Deconvolved component position angle in the image plane, east of north [{units}].'
+            - E_DC_PA_img_plane:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Error (1 sigma) in <b>DC_PA_img_plane</b> [{units}].'
+            - Tile:
+                  html_help:
+                      mouseover: 'VLASS tile the component is located in.'
+            - Subtile:
+                  html_help:
+                      mouseover: 'VLASS subtile the component is located in.'
+            - QL_image_RA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Central RA of the QL image the component is in [{units}].'
+            - QL_image_DEC:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Central Dec of the QL image the component is in [{units}].'
+            - NVSS_distance:
+                  units: 'arcsec'
+                  html_help:
+                      nvss_catalogue_download_link: 'ftp://nvss.cv.nrao.edu/pub/nvss/CATALOG/CATALOG41.FIT'
+                      mouseover: 'Distance to nearest <a href="{nvss_catalogue_download_link}" download>NVSS
+                                  catalogue</a> component. [{units}]'
+            - FIRST_distance:
+                  units: 'arcsec'
+                  html_help:
+                      first_catalogue_download_link: 'http://sundog.stsci.edu/first/catalogs/first_14dec17.fits.gz'
+                      mouseover: 'Distance to nearest <a href="{first_catalogue_download_link}" download>FIRST
+                                  catalogue</a> component [{units}].'
+            - Peak_to_ring:
+                  html_help:
+                      HTML_INCLUDE_VLAD_NAMESPACE: "metrics::peak_to_ring_annulus"
+                      HTML_INCLUDE_INLINE_MEDIA: 
+                          peak_to_ring_source_example: "media/html/inline_img/peak_to_ring_source_example.html"
+                          peak_to_ring_artefact_example: "media/html/inline_img/peak_to_ring_artefact_example.html"
+                      mouseover: 'Ratio of the core peak-flux to annular maximum-flux of a {r_inner}{units|abbreviate}
+                                  to {r_outer}{units|abbreviate} annulus, centred at the component (RA, Dec).'
+                      expanded: '<div style="padding:5px"><table>
+                                    <tr><td>{peak_to_ring_source_example}</td><td>{peak_to_ring_artefact_example}</td></tr>
+                                    <tr><td align="center" colspan="2"><i><b>Peak-to-Ring Examples.</b></i></td></tr>
+                                </table></div>'
+            - Duplicate_flag:
+                  html_help:
+                      mouseover: 'Flag to denote the duplicate status of a component.'
+                      expanded:  '<ul style="margin: 3px 0 3px 4px">
+                                      <li>0 = Unique component;</li>
+                                      <li>1 = Duplicated component (preferred);</li>
+                                      <li>2 = Duplicated component (not preferred).</li>
+                                  </ul>'
+            - Quality_flag:
+                  html_help:
+                      mouseover: 'QA flag to deal with spurious detections and duplicates due to overlapping VLASS tile edges.'
+                      expanded:  '<ul style="margin: 3px 0 3px 4px">
+                                     <li>&nbsp;&nbsp;0 = Component unflagged (recommended for use);</li>
+                                     <li>+1 = <b>Peak_to_ring < 2 & NN_dist >= 20&Prime;</b>;</li>
+                                     <li>+2 = <b>Peak_flux < 5*Isl_rms</b>;</li>
+                                     <li>+4 = <b>Peak_flux > Total_flux</b>.</li>
+                                  </ul>'
+            - Source_name:
+                  html_help:
+                      mouseover: 'Name of the distinct radio source to which this component has been assigned.'
+            - Source_type:
+                  html_help:
+                      mouseover: 'Flag to indicate the type of source the component has been assigned to.'
+            - QL_cutout:
+                  html_help:
+                      mouseover: 'URL to 3&Prime; cutout of VLASS QL image centred on component position.'
+            - NN_dist:
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Angular distance to nearest other component in the catalogue [{units}].'
+            - BMAJ:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Major axis of the beam [{units}].'
+            - BMIN:
+                  units_old: 'deg'
+                  units: 'arcsec'
+                  html_help:
+                      mouseover: 'Minor axis of the beam [{units}].'
+            - BPA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Beam position angle, east of north [{units}].'
+
+ 
+# Diagnostics settings for the diagnostics command.
+#    Note: the diagnostics step also uses information in the vlad block
+#    for creating a stack vlad catalogue the addition of some global-level
+#    columns.
+# See diagnostics --help command for details.
+diagnostics:
+    # surveys block used to create new columns e.g., cf., NVSS_distance
+    # metadata in above vlad block, with 'nvss_distance' software module
+    # below
+    surveys:
+        FIRST: 
+            file: 'media/surveys/first_14dec17.fits.gz'
+            header:
+                ra:
+                    units: 'deg'
+                    field: 'RA'
+                dec:
+                    units: 'deg'
+                    field: 'DEC'
+        NVSS:
+            file: 'media/surveys/CATALOG41.FIT.gz'
+            header:
+                ra:
+                    units: 'deg'
+                    field: 'RA(2000)'
+                dec: 
+                    units: 'deg'
+                    field: 'DEC(2000)'
+    # vlad processing modules for adding extra columns
+    vlad_modules:
+        - FIRST_distance: 
+              module: 'first_distance'
+        - NVSS_distance: 
+              module: 'nvss_distance'
+    # subtile info table black
+    subtile_info_table:
+        # final product output filenames (used at the qa command stage)
+        filename: 'CIRADA_VLASS1QL_table3_subtile_info.csv'
+        json_help_file: 'VLASS_Subtile_Info_Table_Help_Map.json'
+        # catalogue column module script (i.e., one generate the whole table,
+        # not each column like the vlad case).
+        module: 'build_subtile_info_table'
+        # subtile info table and html_help metadata
+        meta:
+            - Subtile:
+                  html_help:
+                      mouseover: 'Subtile image name.'
+            - Image_version:
+                  html_help:
+                      mouseover: 'Subtile version.'
+            - Tile:
+                  html_help:
+                      mouseover: 'Tile name.'
+            - Epoch:
+                  html_help:
+                      mouseover: 'VLASS epoch.'
+            - NAXIS:
+                  html_help:
+                      mouseover: 'Number fits image axes.'
+            - NAXIS1:
+                  html_help:
+                      mouseover: 'Axes 1 length.'
+            - NAXIS2:
+                  html_help:
+                      mouseover: 'Axes 2 length.'
+            - NAXIS3:
+                  html_help:
+                      mouseover: 'Axes 3 length.'
+            - NAXIS4:
+                  html_help:
+                      mouseover: 'Axes 4 length.'
+            - BSCALE:
+                  html_help:
+                      mouseover: 'Scaling to make pixel values physical.'
+            - BZERO:
+                  html_help:
+                      mouseover: 'Zero point of pixel scaling.'
+            - BMAJ:
+                  units: deg
+                  html_help:
+                      mouseover: 'Major beam axis [{units}].'
+            - BMIN:
+                  units: deg
+                  html_help:
+                      mouseover: 'Minor beam axis [{units}].'
+            - BPA:
+                  units: deg
+                  html_help:
+                      mouseover: 'Beam position angle (East of North).'
+            - BTYPE:
+                  html_help:
+                      mouseover: 'Image type.'
+            - BUNIT:
+                  units: "Jy/beam"
+                  html_help:
+                      mouseover: 'Pixel units (brightness per beam) [{units}].'
+            - OBJECT:
+                  html_help:
+                      mouseover: 'Specific target.'
+            - EQUINOX:
+                  html_help:
+                      mouseover: 'Coordinate system Equinox.'
+            - RADESYS:
+                  html_help:
+                      mouseover: 'Coordinate system.'
+            - LATPOLE:
+                  html_help:
+                      mouseover: 'Latitude of pole in coordinate system.'
+            - LONPOLE:
+                  html_help:
+                      mouseover: 'Longitude of pole in coordinate system.'
+            - PC1_1:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC2_1:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC3_1:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC4_1:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC1_2:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC2_2:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC3_2:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC4_2:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC1_3:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC2_3:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC3_3:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC4_3:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC1_4:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC2_4:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC3_4:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - PC4_4:
+                  html_help:
+                      mouseover: 'Image rotation matrix element.'
+            - CTYPE1:
+                  html_help:
+                      mouseover: 'Axis 1 type (8 characters).'
+            - CRVAL1:
+                  html_help:
+                      mouseover: 'Coordinate value at <b>CRPIX1</b>.'
+            - CDELT1:
+                  html_help:
+                      mouseover: 'Coordinate increment at <b>CRPIX1</b>.'
+            - CRPIX1:
+                  html_help:
+                      mouseover: 'Axis 1 reference point [pixel].'
+            - CUNIT1:
+                  html_help:
+                      mouseover: 'Axes 1 units.'
+            - CTYPE2:
+                  html_help:
+                      mouseover: 'Axis 2 type (8 characters).'
+            - CRVAL2:
+                  html_help:
+                      mouseover: 'Coordinate value at <b>CRPIX2</b>.'
+            - CDELT2:
+                  html_help:
+                      mouseover: 'Coordinate increment at <b>CRPIX2</b>.'
+            - CRPIX2:
+                  html_help:
+                      mouseover: 'Axis 2 reference point [pixel].'
+            - CUNIT2:
+                  html_help:
+                      mouseover: 'Axes 2 units.'
+            - CTYPE3:
+                  html_help:
+                      mouseover: 'Axis 3 type (8 characters).'
+            - CRVAL3:
+                  html_help:
+                      mouseover: 'Coordinate value at <b>CRPIX3</b>.'
+            - CDELT3:
+                  html_help:
+                      mouseover: 'Coordinate increment at <b>CRPIX3</b>.'
+            - CRPIX3:
+                  html_help:
+                      mouseover: 'Axis 3 reference point [pixel].'
+            - CUNIT3:
+                  html_help:
+                      mouseover: 'Axes 3 units.'
+            - CTYPE4:
+                  html_help:
+                      mouseover: 'Axis 4 type (8 characters).'
+            - CRVAL4:
+                  html_help:
+                      mouseover: 'Coordinate value at <b>CRPIX4</b>.'
+            - CDELT4:
+                  html_help:
+                      mouseover: 'Coordinate increment at <b>CRPIX4</b>.'
+            - CRPIX4:
+                  html_help:
+                      mouseover: 'Axis 4 reference point [pixel].'
+            - CUNIT4:
+                  html_help:
+                      mouseover: 'Axes 4 units.'
+            - PV2_1:
+                  html_help:
+                      mouseover: 'Image projection parameter.'
+            - PV2_2:
+                  html_help:
+                      mouseover: 'Image projection parameter.'
+            - RESTFRQ:
+                  html_help:
+                      mouseover: 'Rest frequency.'
+            - SPECSYS:
+                  html_help:
+                      mouseover: 'Spectral reference frame.'
+            - ALTRVAL:
+                  html_help:
+                      mouseover: 'Alternative reference frequency.'
+            - ALTRPIX:
+                  html_help:
+                      mouseover: 'Alternative reference frequency pixel.'
+            - VELREF:
+                  html_help:
+                      mouseover: '1 LSR, 2 HEL, 3 OBS, +256 Radio.'
+            - COMMENT:
+                  html_help:
+                      mouseover: 'String with comment on image production.'
+            - TELESCOP:
+                  html_help:
+                      mouseover: 'Telescope.'
+            - OBSERVER:
+                  html_help:
+                      mouseover: 'Observer.'
+            - DATEOBS:
+                  html_help:
+                      mouseover: 'Observation date-time.'
+            - TIMESYS:
+                  html_help:
+                      mouseover: 'Time system.'
+            - OBSRA:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Observation RA [{units}].'
+            - OBSDEC:
+                  units: 'deg'
+                  html_help:
+                      mouseover: 'Observation Dec [{units}]'
+            - OBSGEOX:
+                  units: 'm'
+                  html_help:
+                      mouseover: 'Geographic X-coordinate of observatory [{units}].'
+            - OBSGEOY:
+                  units: 'm'
+                  html_help:
+                      mouseover: 'Geographic y-coordinate of observatory [{units}].'
+            - OBSGEOZ:
+                  units: 'm'
+                  html_help:
+                      mouseover: 'Geographic z-coordinate of observatory [{units}].'
+            - FIELD:
+                  html_help:
+                      mouseover: ''
+            - FILNAM01:
+                  html_help:
+                      mouseover: 'Image filename field: VLASS Epoch.'
+            - FILNAM02:
+                  html_help:
+                      mouseover: 'Image filename field: Sub-epoch.'
+            - FILNAM03:
+                  html_help:
+                      mouseover: 'Image filename field: Product type.'
+            - FILNAM04:
+                  html_help:
+                      mouseover: 'Image filename field: Tile name.'
+            - FILNAM05:
+                  html_help:
+                      mouseover: 'Image filename field: Subtile name.'
+            - FILNAM06:
+                  html_help:
+                      mouseover: 'Image filename field: Pixel size (10=1.0 arcsec).'
+            - FILNAM07:
+                  html_help:
+                      mouseover: 'Image filename field: Bandwidth in MHz.'
+            - FILNAM08:
+                  html_help:
+                      mouseover: 'Image filename field: Version number.'
+            - FILNAM09:
+                  html_help:
+                      mouseover: 'Image filename field: Stokes type.'
+            - FILNAM10:
+                  html_help:
+                      mouseover: 'Image filename field: Iteration.'
+            - FILNAM11:
+                  html_help:
+                      mouseover: 'Image filename field: FITS file type.'
+            - FILNAM12:
+                  html_help:
+                      mouseover: 'Image filename field: Taylor term order.'
+            - INTENT:
+                  html_help:
+                      mouseover: 'Scan intent.'
+            - ITER:
+                  html_help:
+                      mouseover: 'Iteration.'
+            - NFILNAM:
+                  html_help:
+                      mouseover: 'Number of <b>FILNAM</b>nn fields.'
+            - SPECMODE:
+                  html_help:
+                      mouseover: ''
+            - SPW:
+                  html_help:
+                      mouseover: 'Spectral windows.'
+            - TYPE:
+                  html_help:
+                      mouseover: 'FITS file type.'
+            - DATE:
+                  html_help:
+                      mouseover: 'Date FITS file was written.'
+            - ORIGIN:
+                  html_help:
+                      mouseover: 'Software used to produce image file.'
+            - HISTORY:
+                  html_help:
+                      mouseover: 'String with CASA output log.'
+            - Mean_isl_rms:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Mean of PyBDSF Island RMS (<b>Isl_rms</b>) [{units}].'
+            - SD_isl_rms:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Standard Deviation of PyBDSF Island RMS (<b>Isl_rms</b>) [{units}].'
+            - Peak_flux_p25:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: '25th percentile of PyBDSF <b>Peak_flux</b> values in image [{units}].'
+            - Peak_flux_p50:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: '50th percentile of PyBDSF <b>Peak_flux</b> values in image [{units}].'
+            - Peak_flux_p75:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: '75th percentile of PyBDSF <b>Peak_flux</b> values in image [{units}].'
+            - Peak_flux_max:
+                  units: 'mJy/beam'
+                  html_help:
+                      mouseover: 'Maximum PyBDSF <b>Peak_flux</b> of image islands/components [{units}].'
+            - N_components:
+                  html_help:
+                      mouseover: 'Number of PyBDSF sources (<i>i.e.</i>, components) in image.'
+            - N_empty_islands:
+                  html_help:
+                      mouseover: 'Number of PyBDSF empty-islands in image.'
+            # TO-DO: replace with below links
+            #- Subtile_url:
+            #      html_help:
+            #          mouseover: ''
+            - Link_VOSpace:
+                  html_help:
+                      mouseover: 'Link to the image file in VOSpace.'
+            - Link_CADCArchive:
+                  html_help:
+                      mouseover: 'Link to the image file in CADC Archive.'
+
+
+# QA settings for the qa command.
+#    Note: the qa step also uses information in the vlad and
+#    diagnostics blocks for catalogue and HTML help metadata
+#    BDP deployment to the products directory.
+# See qa --help command for details.
+qa:
+    # software module input metrics
+    metrics:
+        duplicate_flagging:
+            duplicate_search:
+                units: arcsec
+                radius: 2
+        quality_flagging:
+            sig_noise_threshold: 5
+            peak_to_ring_threshold: 2
+    # qa software modules for adding qa parameters / flags
+    vlad_modules:
+        - xy_positions:
+              module: xy_positions
+              returns:
+                  - Xposn
+                  - E_Xposn
+                  - Yposn
+                  - E_Yposn
+                  - Xposn_max
+                  - E_Xposn_max
+                  - Yposn_max
+                  - E_Yposn_max
+        - Duplicate_flag:
+           module: find_duplicates
+        - NN_dist:
+           module: nn_distance
+        - Quality_flag: 
+           module: quality_flag
+        - Source_name:
+           module: source_name
+        - Source_type:
+           module: source_type
+
+
+# Upload settings for the upload command.
+# See upload --help command for details.
+upload:
+    # VOSpace location for CIRADA database upload.
+    destination: vos:/cirada/continuum/mboyce/pipeline_upload_test
+
+

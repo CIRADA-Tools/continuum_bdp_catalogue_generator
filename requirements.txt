@@ -1,0 +1,13 @@
+psutil
+enlighten
+pyyaml
+python-casacore
+vos
+numpy
+pandas
+astropy
+bdsf
+photutils
+matplotlib
+click
+
